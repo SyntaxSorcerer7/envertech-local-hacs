@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Envertech EVT Local",
+        "description": "Set up your Envertech inverter for local TCP communication.",
+        "data": {
+          "host": "IP Address",
+          "serial": "Serial Number (hex, e.g. A1B2C3D4)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to inverter. Check IP and serial.",
+      "invalid_serial": "Invalid serial number. Enter as hex value (e.g. A1B2C3D4)."
+    },
+    "abort": {
+      "already_configured": "This inverter is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dc_voltage": { "name": "DC Voltage" },
+      "ac_power": { "name": "AC Power" },
+      "total_energy": { "name": "Total Energy" },
+      "temperature": { "name": "Temperature" },
+      "ac_voltage": { "name": "AC Voltage" },
+      "frequency": { "name": "Frequency" },
+      "total_ac_power": { "name": "Total AC Power" },
+      "total_energy_all": { "name": "Total Energy" },
+      "firmware": { "name": "Firmware Version" }
+    },
+    "select": {
+      "power_limit": { "name": "Power Limit" }
+    }
+  }
+}

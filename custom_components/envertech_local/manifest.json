@@ -1,0 +1,11 @@
+{
+  "domain": "envertech_local",
+  "name": "Envertech EVT Local",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "https://github.com/your-repo/envertech-local",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/your-repo/envertech-local/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
