@@ -276,7 +276,15 @@ class EnvertechConnection:
                         skip_cmds=(CMD_SKIP_1, CMD_SKIP_2),
                     )
                     if resp is None:
-                        raise ConnectionError("No response from inverter")
+                        # Timeout on existing connection – retry without disconnecting
+                        last_err = ConnectionError("No response from inverter")
+                        _LOGGER.debug(
+                            "Live data attempt %d timed out, retrying on same connection",
+                            attempt + 1,
+                        )
+                        if attempt < MAX_RETRIES_LIVE - 1:
+                            await asyncio.sleep(RETRY_DELAY)
+                        continue
 
                     resp_cmd = struct.unpack(">H", resp[4:6])[0]
                     if resp_cmd != CMD_LIVE_DATA_RESP:
@@ -289,7 +297,7 @@ class EnvertechConnection:
                 except (ConnectionError, OSError) as err:
                     last_err = err
                     _LOGGER.debug(
-                        "Live data attempt %d failed: %s", attempt + 1, err
+                        "Live data attempt %d connection error: %s", attempt + 1, err
                     )
                     await self.disconnect()
                     if attempt < MAX_RETRIES_LIVE - 1:
@@ -300,35 +308,70 @@ class EnvertechConnection:
             ) from last_err
 
     async def get_power_limit(self) -> int | None:
-        """Read current power limit watt code. Returns watts or None."""
-        async with self._lock:
-            for attempt in range(MAX_RETRIES_STATUS):
-                try:
-                    await self.connect()
-                    resp = await self._send_and_receive(
-                        CMD_STATUS_REQ,
-                        bytes(10),
-                        CMD_STATUS_RESP,
-                        RESPONSE_TIMEOUT_STATUS,
-                    )
-                    if resp is not None:
-                        resp_cmd = struct.unpack(">H", resp[4:6])[0]
-                        if resp_cmd == CMD_STATUS_RESP and len(resp) >= 15:
-                            watt_code = resp[14]
-                            return CODE_TO_WATTS_2000.get(watt_code)
-                except (ConnectionError, OSError) as err:
-                    _LOGGER.debug(
-                        "Power limit read attempt %d failed: %s",
-                        attempt + 1,
-                        err,
-                    )
-                    await self.disconnect()
+        """Read current power limit watt code.
 
-                if attempt < MAX_RETRIES_STATUS - 1:
-                    await asyncio.sleep(STATUS_RETRY_DELAY)
+        Opens a dedicated connection per attempt (separate from the persistent
+        live-data connection), matching the reference implementation.
+        Returns watts or None on failure.
+        """
+        req = _build_frame(CMD_STATUS_REQ, self._serial, bytes(10))
+        tx_data = _encode_tx(req)
 
-            _LOGGER.warning("Failed to read power limit after %d attempts", MAX_RETRIES_STATUS)
-            return None
+        for attempt in range(MAX_RETRIES_STATUS):
+            if attempt > 0:
+                await asyncio.sleep(STATUS_RETRY_DELAY)
+            sock_reader: asyncio.StreamReader | None = None
+            sock_writer: asyncio.StreamWriter | None = None
+            try:
+                sock_reader, sock_writer = await asyncio.wait_for(
+                    asyncio.open_connection(self._host, TCP_PORT),
+                    timeout=CONNECT_TIMEOUT,
+                )
+                sock_writer.write(tx_data)
+                await sock_writer.drain()
+
+                deadline = asyncio.get_event_loop().time() + RESPONSE_TIMEOUT_STATUS
+                while asyncio.get_event_loop().time() < deadline:
+                    remaining = deadline - asyncio.get_event_loop().time()
+                    if remaining <= 0:
+                        break
+                    # Read one frame manually using a temporary reader
+                    try:
+                        b = await asyncio.wait_for(sock_reader.read(1), timeout=remaining)
+                    except asyncio.TimeoutError:
+                        break
+                    if not b or b[0] != FRAME_START:
+                        continue
+                    try:
+                        len_bytes = await asyncio.wait_for(
+                            sock_reader.readexactly(2), timeout=remaining
+                        )
+                        total_length = struct.unpack(">H", len_bytes)[0]
+                        rest = await asyncio.wait_for(
+                            sock_reader.readexactly(total_length - 3), timeout=remaining
+                        )
+                    except (asyncio.TimeoutError, asyncio.IncompleteReadError):
+                        break
+                    frame = bytes([FRAME_START]) + len_bytes + rest
+                    resp_cmd = struct.unpack(">H", frame[4:6])[0]
+                    if resp_cmd == CMD_STATUS_RESP and len(frame) >= 15:
+                        watt_code = frame[14]
+                        return CODE_TO_WATTS_2000.get(watt_code)
+
+            except (OSError, asyncio.TimeoutError) as err:
+                _LOGGER.debug(
+                    "Power limit read attempt %d failed: %s", attempt + 1, err
+                )
+            finally:
+                if sock_writer is not None:
+                    try:
+                        sock_writer.close()
+                        await sock_writer.wait_closed()
+                    except OSError:
+                        pass
+
+        _LOGGER.warning("Failed to read power limit after %d attempts", MAX_RETRIES_STATUS)
+        return None
 
     async def set_power_limit(self, watts: int) -> bool:
         """Set power limit. Returns True on success."""

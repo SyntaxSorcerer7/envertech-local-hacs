@@ -170,7 +170,7 @@ class EnvertechChannelSensor(
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.serial_hex}_mi{channel_idx}")},
-            name=f"Envertech MI {channel_idx}",
+            name=f"envertech-input-port-{channel_idx + 1}",
             manufacturer=MANUFACTURER,
             model=MODEL,
             via_device=(DOMAIN, coordinator.serial_hex),
