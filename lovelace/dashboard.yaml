@@ -48,6 +48,14 @@ views:
             Keine Einspeisung – Nacht oder Bewölkung
           {% endif %}
 
+      - type: custom:mushroom-entity-card
+        entity: binary_sensor.envertech_online
+        name: Wechselrichter
+        icon: mdi:lan-connect
+        primary_info: state
+        secondary_info: name
+        layout: horizontal
+
       # ── ENERGIEFLUSS: EINGÄNGE → WECHSELRICHTER → HAUS ───────────
       - type: custom:power-flow-card-plus
         entities:

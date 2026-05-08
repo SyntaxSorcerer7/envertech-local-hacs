@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import EnvertechCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SELECT]
 
 type EnvertechConfigEntry = ConfigEntry[EnvertechCoordinator]
 

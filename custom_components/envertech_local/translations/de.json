@@ -45,6 +45,9 @@
     },
     "select": {
       "power_limit": { "name": "Leistungsbegrenzung" }
+    },
+    "binary_sensor": {
+      "online": { "name": "Online" }
     }
   }
 }
