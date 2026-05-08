@@ -177,9 +177,7 @@ views:
           colorize_states: true
         chart_type: line
         span:
-          end: now
-          duration:
-            hours: 24
+          start: day
         apex_config:
           chart:
             height: 250
