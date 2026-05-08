@@ -35,10 +35,7 @@ Lokale Home Assistant Integration für **Envertech EVT2000SE** Mikro-Wechselrich
 
 ### Seriennummer herausfinden
 
-Die Seriennummer steht auf dem Typenschild des Wechselrichters. In der Integration wird sie als **Hex-Wert** eingegeben. Beispiel:
-
-- Dezimal: `2712847316` → Hex: `A1B2C3D4`
-- Auf dem Typenschild steht möglicherweise die Hex-Darstellung direkt
+Die Seriennummer steht auf dem Typenschild des Wechselrichters und wird **genau so eingegeben, wie sie dort aufgedruckt ist** (z.B. `3011156`).
 
 Die Seriennummer kann auch über die EnverView-App oder das Envertech-Portal abgelesen werden.
 
@@ -68,7 +65,7 @@ Die Seriennummer kann auch über die EnverView-App oder das Envertech-Portal abg
 1. **Einstellungen** → **Geräte & Dienste** → **Integration hinzufügen**
 2. Nach **"Envertech EVT Local"** suchen
 3. IP-Adresse des Wechselrichters eingeben
-4. Seriennummer als Hex-Wert eingeben (z.B. `A1B2C3D4`)
+4. Seriennummer eingeben, genau wie auf dem Typenschild aufgedruckt
 5. Die Integration testet die Verbindung automatisch
 
 ### Parameter
@@ -76,7 +73,7 @@ Die Seriennummer kann auch über die EnverView-App oder das Envertech-Portal abg
 | Parameter | Beschreibung | Beispiel |
 |-----------|-------------|----------|
 | IP-Adresse | Lokale IP des Wechselrichters | `192.168.1.100` |
-| Seriennummer | Geräte-Serial als Hex | `A1B2C3D4` |
+| Seriennummer | Seriennummer vom Typenschild | `3011156` |
 
 > **Tipp:** Vergib dem Wechselrichter eine feste IP-Adresse in deinem Router (DHCP-Reservierung), damit sich die IP nicht ändert.
 
@@ -250,9 +247,8 @@ Der EVT2000SE enthält 4 logische Mikroinverter (MI 0–3) mit fortlaufenden UID
 
 ### Falsche Seriennummer
 
-- Die Seriennummer muss als **Hex-Wert** eingegeben werden
-- Beispiel: Wenn auf dem Gerät `2712847316` steht → in Hex umrechnen: `A1B2C3D4`
-- Python: `hex(2712847316)` → `0xA1B2C3D4`
+- Die Seriennummer **genau so eingeben, wie sie auf dem Typenschild steht**
+- Beispiel: Typenschild zeigt `3011156` → genau `3011156` eingeben
 
 ### Leistungsbegrenzung funktioniert nicht
 

@@ -9,7 +9,7 @@ from datetime import datetime
 
 IP = "192.168.1.100"
 PORT = 14889
-SERIAL_STR = "A1B2C3D4"   # Seriennummer wie auf dem Gerät aufgedruckt (Hex-Ziffern)
+SERIAL_STR = "3011156"   # Seriennummer wie auf dem Gerät aufgedruckt
 SERIAL = int(SERIAL_STR, 16)
 POLL_INTERVAL = 30
 

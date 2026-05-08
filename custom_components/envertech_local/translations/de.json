@@ -6,13 +6,13 @@
         "description": "Richte deinen Envertech Wechselrichter für lokale TCP-Kommunikation ein.",
         "data": {
           "host": "IP-Adresse",
-          "serial": "Seriennummer (Hex, z.B. A1B2C3D4)"
+          "serial": "Seriennummer (wie auf dem Typenschild)"
         }
       }
     },
     "error": {
       "cannot_connect": "Verbindung zum Wechselrichter fehlgeschlagen. Prüfe IP und Seriennummer.",
-      "invalid_serial": "Ungültige Seriennummer. Als Hex-Wert eingeben (z.B. A1B2C3D4)."
+      "invalid_serial": "Ungültige Seriennummer. Genau so eingeben wie auf dem Typenschild."
     },
     "abort": {
       "already_configured": "Dieser Wechselrichter ist bereits konfiguriert."

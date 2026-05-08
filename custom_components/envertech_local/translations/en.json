@@ -6,13 +6,13 @@
         "description": "Set up your Envertech inverter for local TCP communication.",
         "data": {
           "host": "IP Address",
-          "serial": "Serial Number (hex, e.g. A1B2C3D4)"
+          "serial": "Serial Number (as printed on device label)"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to inverter. Check IP and serial.",
-      "invalid_serial": "Invalid serial number. Enter as hex value (e.g. A1B2C3D4)."
+      "invalid_serial": "Invalid serial number. Enter exactly as printed on the device label."
     },
     "abort": {
       "already_configured": "This inverter is already configured."

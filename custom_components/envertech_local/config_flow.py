@@ -38,12 +38,9 @@ class EnvertechLocalConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST].strip()
             serial_str = user_input[CONF_SERIAL].strip()
 
-            # Parse serial as hex
+            # Parse serial as hex (entered exactly as printed on the device label)
             try:
-                if serial_str.startswith("0x") or serial_str.startswith("0X"):
-                    serial = int(serial_str, 16)
-                else:
-                    serial = int(serial_str, 16)
+                serial = int(serial_str, 16)
             except ValueError:
                 errors[CONF_SERIAL] = "invalid_serial"
 
