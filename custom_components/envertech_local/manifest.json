@@ -3,9 +3,9 @@
   "name": "Envertech EVT Local",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://github.com/your-repo/envertech-local",
+  "documentation": "https://github.com/SyntaxSorcerer7/envertech-local-hacs",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/your-repo/envertech-local/issues",
+  "issue_tracker": "https://github.com/SyntaxSorcerer7/envertech-local-hacs/issues",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.0.1"
 }
