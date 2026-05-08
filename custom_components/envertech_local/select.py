@@ -44,6 +44,7 @@ class EnvertechPowerLimitSelect(
         """Initialize the select entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.serial_hex}_power_limit"
+        self.entity_id = "select.envertech_power_limit"
         self._attr_options = POWER_LIMIT_OPTIONS_STR
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_hex)},

@@ -189,7 +189,7 @@ automation:
     action:
       - service: select.select_option
         target:
-          entity_id: select.envertech_a1b2c3d4_power_limit
+          entity_id: select.envertech_a1b2c3d4_leistungsbegrenzung
         data:
           option: "800W"
 ```
@@ -201,13 +201,13 @@ automation:
   - alias: "Wechselrichter Übertemperatur-Warnung"
     trigger:
       - platform: numeric_state
-        entity_id: sensor.envertech_mi_0_temperature
+        entity_id: sensor.envertech_input_port_1_temperatur
         above: 70
     action:
       - service: notify.mobile_app
         data:
           title: "⚠️ Wechselrichter Warnung"
-          message: "MI 0 Temperatur: {{ states('sensor.envertech_mi_0_temperature') }}°C"
+          message: "MI 0 Temperatur: {{ states('sensor.envertech_input_port_1_temperatur') }}°C"
 ```
 
 ### Beispiel: Lovelace Dashboard Card
@@ -216,20 +216,20 @@ automation:
 type: entities
 title: Envertech EVT2000SE
 entities:
-  - entity: sensor.envertech_a1b2c3d4_total_ac_power
+  - entity: sensor.envertech_a1b2c3d4_ac_gesamtleistung
     name: Gesamtleistung
-  - entity: sensor.envertech_a1b2c3d4_total_energy_all
+  - entity: sensor.envertech_a1b2c3d4_gesamtenergie
     name: Gesamtenergie
-  - entity: select.envertech_a1b2c3d4_power_limit
+  - entity: select.envertech_a1b2c3d4_leistungsbegrenzung
     name: Leistungsbegrenzung
   - type: divider
-  - entity: sensor.envertech_mi_0_ac_power
+  - entity: sensor.envertech_input_port_1_ac_leistung
     name: MI 0 Leistung
-  - entity: sensor.envertech_mi_1_ac_power
+  - entity: sensor.envertech_input_port_2_ac_leistung
     name: MI 1 Leistung
-  - entity: sensor.envertech_mi_2_ac_power
+  - entity: sensor.envertech_input_port_3_ac_leistung
     name: MI 2 Leistung
-  - entity: sensor.envertech_mi_3_ac_power
+  - entity: sensor.envertech_input_port_4_ac_leistung
     name: MI 3 Leistung
 ```
 

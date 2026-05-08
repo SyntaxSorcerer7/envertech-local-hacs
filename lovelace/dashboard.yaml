@@ -17,15 +17,16 @@
 #      https://github.com/flixlix/power-flow-card-plus
 #
 # ═══════════════════════════════════════════════════════════════════════
-# SETUP – EINMALIG VOR DER NUTZUNG:
+# SETUP: Kein Anpassen nötig – einfach importieren und loslegen!
 #
-#   SCHRITT 1: YOUR_SERIAL ersetzen (Kleinbuchstaben)
-#     Die genaue Entity-ID siehst du unter:
-#     Einstellungen → Geräte & Dienste → Envertech → Entity anklicken
-#     Beispiel: Seriennummer 3011156 → sensor.envertech_3011156_total_ac_power
-#
-#   Alle anderen Sensoren (Energie Heute, Ertrag Heute usw.) werden
-#   automatisch von der Integration angelegt – kein manueller Helfer nötig.
+#   Alle Entity-IDs sind fest (keine Seriennummer im Namen):
+#     sensor.envertech_total_ac_power
+#     sensor.envertech_total_energy_all
+#     sensor.envertech_daily_energy
+#     sensor.envertech_daily_earnings
+#     sensor.envertech_earnings
+#     sensor.envertech_input_port_1_ac_power  … bis _4_
+#     select.envertech_power_limit
 #
 # ═══════════════════════════════════════════════════════════════════════
 
@@ -40,7 +41,7 @@ views:
       - type: custom:mushroom-title-card
         title: "☀️ Solaranlage"
         subtitle: >
-          {% set p = states('sensor.envertech_YOUR_SERIAL_total_ac_power') | float(0) %}
+          {% set p = states('sensor.envertech_total_ac_power') | float(0) %}
           {% if p > 1 %}
             {{ p | round(0) | int }} W werden gerade eingespeist
           {% else %}
@@ -51,11 +52,11 @@ views:
       - type: custom:power-flow-card-plus
         entities:
           grid:
-            entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+            entity: sensor.envertech_total_ac_power
             name: Netzeinspeisung
             icon: mdi:transmission-tower
           solar:
-            entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+            entity: sensor.envertech_total_ac_power
             display_zero_state: true
           individual1:
             entity: sensor.envertech_input_port_1_ac_power
@@ -125,7 +126,7 @@ views:
 
       # ── GESAMTLEISTUNG (GAUGE) ──────────────────────────────────────
       - type: gauge
-        entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+        entity: sensor.envertech_total_ac_power
         name: Gesamtleistung Einspeisung
         min: 0
         max: 2000
@@ -141,7 +142,7 @@ views:
         square: false
         cards:
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_YOUR_SERIAL_daily_energy
+            entity: sensor.envertech_daily_energy
             name: Heute erzeugt
             icon: mdi:weather-sunny
             icon_color: yellow
@@ -149,7 +150,7 @@ views:
             secondary_info: name
 
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_YOUR_SERIAL_daily_earnings
+            entity: sensor.envertech_daily_earnings
             name: Heutiger Ertrag
             icon: mdi:cash-plus
             icon_color: green
@@ -157,7 +158,7 @@ views:
             secondary_info: name
 
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_YOUR_SERIAL_earnings
+            entity: sensor.envertech_earnings
             name: Gesamtertrag
             icon: mdi:piggy-bank
             icon_color: green
@@ -219,7 +220,7 @@ views:
             show: true
             position: top
         series:
-          - entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+          - entity: sensor.envertech_total_ac_power
             name: Gesamt
             color: "#f39c12"
           - entity: sensor.envertech_input_port_1_ac_power
@@ -287,7 +288,7 @@ views:
             y:
               formatter: "function(val) { return val.toFixed(3) + ' kWh' }"
         series:
-          - entity: sensor.envertech_YOUR_SERIAL_daily_energy
+          - entity: sensor.envertech_daily_energy
             name: kWh heute
             color: "#f39c12"
 
@@ -337,7 +338,7 @@ views:
             y:
               formatter: "function(val) { return val !== null ? val.toFixed(2) + ' kWh' : 'Keine Daten' }"
         series:
-          - entity: sensor.envertech_YOUR_SERIAL_total_energy_all
+          - entity: sensor.envertech_total_energy_all
             name: Tagesproduktion (kWh)
             color: "#f39c12"
             statistics:
@@ -447,6 +448,6 @@ views:
         title: Steuerung
         icon: mdi:tune-variant
         entities:
-          - entity: select.envertech_YOUR_SERIAL_power_limit
+          - entity: select.envertech_power_limit
             name: Leistungsbegrenzung
             icon: mdi:flash-triangle

@@ -178,6 +178,9 @@ class EnvertechChannelSensor(
         self._attr_unique_id = (
             f"{coordinator.serial_hex}_mi{channel_idx}_{description.key}"
         )
+        self.entity_id = (
+            f"sensor.envertech_input_port_{channel_idx + 1}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.serial_hex}_mi{channel_idx}")},
             name=f"envertech-input-port-{channel_idx + 1}",
@@ -215,6 +218,7 @@ class EnvertechTotalSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_hex}_{description.key}"
+        self.entity_id = f"sensor.envertech_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_hex)},
             name=f"Envertech {coordinator.serial_hex}",
@@ -252,6 +256,7 @@ class EnvertechEarningsSensor(
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"{coordinator.serial_hex}_earnings"
+        self.entity_id = "sensor.envertech_earnings"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_hex)},
             name=f"Envertech {coordinator.serial_hex}",
@@ -305,6 +310,7 @@ class EnvertechDailyEnergySensor(
         self._entry = entry
         self._midnight_baseline: float | None = None
         self._attr_unique_id = f"{coordinator.serial_hex}_daily_energy"
+        self.entity_id = "sensor.envertech_daily_energy"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_hex)},
             name=f"Envertech {coordinator.serial_hex}",
@@ -372,6 +378,7 @@ class EnvertechDailyEarningsSensor(
         self._entry = entry
         self._midnight_baseline: float | None = None
         self._attr_unique_id = f"{coordinator.serial_hex}_daily_earnings"
+        self.entity_id = "sensor.envertech_daily_earnings"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_hex)},
             name=f"Envertech {coordinator.serial_hex}",
