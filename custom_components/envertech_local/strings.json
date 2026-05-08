@@ -39,7 +39,9 @@
       "total_ac_power": { "name": "Total AC Power" },
       "total_energy_all": { "name": "Total Energy" },
       "firmware": { "name": "Firmware Version" },
-      "earnings": { "name": "Earnings" }
+      "earnings": { "name": "Earnings" },
+      "daily_energy": { "name": "Energy Today" },
+      "daily_earnings": { "name": "Earnings Today" }
     },
     "select": {
       "power_limit": { "name": "Power Limit" }

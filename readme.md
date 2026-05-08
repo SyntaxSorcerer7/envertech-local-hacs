@@ -124,6 +124,51 @@ Es werden **4 Geräte** angelegt (MI 0 bis MI 3), jeweils mit:
 
 ---
 
+## Dashboard
+
+Die Integration enthält ein fertiges Lovelace-Dashboard unter [`lovelace/dashboard.yaml`](lovelace/dashboard.yaml).
+
+### Enthaltene Karten
+
+| Karte | Beschreibung |
+|-------|-------------|
+| **Energiefluss** | Animierter Fluss von jedem Eingang über den Wechselrichter ins Netz (Power Flow Card Plus) |
+| **Live-Eingänge** | 4er-Grid mit aktueller Leistung je Eingang (Mushroom Cards) |
+| **Gauge** | Anzeige der Gesamtleistung mit Farbschwellen (0–2000W) |
+| **Heute / Gesamt** | Heutige kWh, heutiger Ertrag (€), Gesamtertrag (€) |
+| **24h Leistungsgraph** | Watt-Verlauf aller 4 Eingänge + Gesamt, letzten 24h (ApexCharts) |
+| **Tagesertrag akkumuliert** | kWh-Aufbau von 00:00 bis jetzt – täglich automatischer Reset (ApexCharts) |
+| **7-Tage-Balken** | Tagesproduktion der letzten 7 Tage mit Datenbeschriftung (ApexCharts) |
+| **Detailkarten** | Alle Messwerte je Eingang (Spannung, Frequenz, Temperatur, Energie) |
+| **Steuerung** | Leistungsbegrenzung setzen |
+
+### Benötigte HACS Custom Cards
+
+Vor der Nutzung einmalig in HACS installieren:
+
+| Card | HACS-Suche |
+|------|-----------|
+| ApexCharts Card | `ApexCharts Card` |
+| Mushroom | `Mushroom` |
+| Power Flow Card Plus | `Power Flow Card Plus` |
+
+### Dashboard importieren
+
+1. In Home Assistant: **Einstellungen** → **Dashboards** → **Dashboard hinzufügen**
+2. Namen vergeben (z.B. `Solar`), Icon `mdi:solar-power-variant`
+3. Dashboard öffnen → Menü (⋮) → **Raw-Konfigurationseditor**
+4. Inhalt von [`lovelace/dashboard.yaml`](lovelace/dashboard.yaml) einfügen
+5. **Speichern**
+
+### Einmalige Einrichtung
+
+**Schritt 1 – YOUR_SERIAL ersetzen:**  
+Alle Vorkommen von `YOUR_SERIAL` durch deine Seriennummer (Kleinbuchstaben) ersetzen. Die genaue Entity-ID siehst du unter Einstellungen → Geräte & Dienste → Envertech → Entity anklicken.
+
+Alle anderen Sensoren (Energie Heute, Ertrag Heute) werden **automatisch von der Integration angelegt** – kein manueller Helfer nötig.
+
+---
+
 ## Automationen & Dashboards
 
 ### Beispiel: Energy Dashboard
@@ -326,6 +371,20 @@ Die vollständige Protokolldokumentation befindet sich in [`research/wechselrich
 ---
 
 ## Changelog
+
+### 1.4.0 – 2026-05-08
+
+- **Neu:** `Energie Heute` und `Ertrag Heute` werden automatisch von der Integration als native Sensoren angelegt (kein manueller Utility-Meter-Helfer mehr nötig)
+- Tages-Sensoren setzen sich täglich um Mitternacht automatisch zurück und überleben HA-Neustarts dank `RestoreSensor`
+
+### 1.3.0 – 2026-05-08
+
+- **Neu:** Vollständig überarbeitetes Live-Dashboard mit animiertem Energiefluss, Tagesertrag-Graph (akkumuliert ab 00:00), 7-Tage-Balkendiagramm, 24h-Leistungsgraph aller 4 Eingänge
+- **Neu:** Anleitung für Utility-Meter-Helper (heutige kWh) und Today's-Earnings-Template-Sensor
+
+### 1.2.0 – 2026-05-08
+
+- **Neu:** Mitgeliefertes Lovelace-Dashboard (`lovelace/dashboard.yaml`) mit Gauge, Verlaufsgraphen, MI-Detailkarten und Ertragssensor
 
 ### 1.1.0 – 2026-05-08
 

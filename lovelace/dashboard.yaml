@@ -1,0 +1,452 @@
+# ═══════════════════════════════════════════════════════════════════════
+# ENVERTECH SOLAR – LIVE DASHBOARD
+# ═══════════════════════════════════════════════════════════════════════
+#
+# BENÖTIGTE HACS CUSTOM CARDS (einmalig installieren):
+#
+#   1. ApexCharts Card
+#      HACS → Frontend → "ApexCharts Card"
+#      https://github.com/RomRider/apexcharts-card
+#
+#   2. Mushroom Cards
+#      HACS → Frontend → "Mushroom"
+#      https://github.com/piitaya/lovelace-mushroom
+#
+#   3. Power Flow Card Plus  (für animierten Energiefluss)
+#      HACS → Frontend → "Power Flow Card Plus"
+#      https://github.com/flixlix/power-flow-card-plus
+#
+# ═══════════════════════════════════════════════════════════════════════
+# SETUP – EINMALIG VOR DER NUTZUNG:
+#
+#   SCHRITT 1: YOUR_SERIAL ersetzen (Kleinbuchstaben)
+#     Die genaue Entity-ID siehst du unter:
+#     Einstellungen → Geräte & Dienste → Envertech → Entity anklicken
+#     Beispiel: Seriennummer 3011156 → sensor.envertech_3011156_total_ac_power
+#
+#   Alle anderen Sensoren (Energie Heute, Ertrag Heute usw.) werden
+#   automatisch von der Integration angelegt – kein manueller Helfer nötig.
+#
+# ═══════════════════════════════════════════════════════════════════════
+
+title: Solar
+views:
+  - title: Live
+    path: envertech-solar
+    icon: mdi:solar-power-variant
+    cards:
+
+      # ── KOPFZEILE ──────────────────────────────────────────────────
+      - type: custom:mushroom-title-card
+        title: "☀️ Solaranlage"
+        subtitle: >
+          {% set p = states('sensor.envertech_YOUR_SERIAL_total_ac_power') | float(0) %}
+          {% if p > 1 %}
+            {{ p | round(0) | int }} W werden gerade eingespeist
+          {% else %}
+            Keine Einspeisung – Nacht oder Bewölkung
+          {% endif %}
+
+      # ── ENERGIEFLUSS: EINGÄNGE → WECHSELRICHTER → NETZ ────────────
+      - type: custom:power-flow-card-plus
+        entities:
+          grid:
+            entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+            name: Netzeinspeisung
+            icon: mdi:transmission-tower
+          solar:
+            entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+            display_zero_state: true
+          individual1:
+            entity: sensor.envertech_input_port_1_ac_power
+            name: Eingang 1
+            icon: mdi:solar-panel
+            color: amber
+            display_zero: true
+          individual2:
+            entity: sensor.envertech_input_port_2_ac_power
+            name: Eingang 2
+            icon: mdi:solar-panel
+            color: amber
+            display_zero: true
+          individual3:
+            entity: sensor.envertech_input_port_3_ac_power
+            name: Eingang 3
+            icon: mdi:solar-panel
+            color: amber
+            display_zero: true
+          individual4:
+            entity: sensor.envertech_input_port_4_ac_power
+            name: Eingang 4
+            icon: mdi:solar-panel
+            color: amber
+            display_zero: true
+        watt_threshold: 0
+        min_flow_rate: 0.5
+        max_flow_rate: 8
+        clickable_entities: true
+
+      # ── EINGÄNGE: LIVE-LEISTUNG ─────────────────────────────────────
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_input_port_1_ac_power
+            name: Eingang 1
+            icon: mdi:solar-panel
+            icon_color: amber
+            primary_info: state
+            secondary_info: name
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_input_port_2_ac_power
+            name: Eingang 2
+            icon: mdi:solar-panel
+            icon_color: amber
+            primary_info: state
+            secondary_info: name
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_input_port_3_ac_power
+            name: Eingang 3
+            icon: mdi:solar-panel
+            icon_color: amber
+            primary_info: state
+            secondary_info: name
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_input_port_4_ac_power
+            name: Eingang 4
+            icon: mdi:solar-panel
+            icon_color: amber
+            primary_info: state
+            secondary_info: name
+
+      # ── GESAMTLEISTUNG (GAUGE) ──────────────────────────────────────
+      - type: gauge
+        entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+        name: Gesamtleistung Einspeisung
+        min: 0
+        max: 2000
+        needle: true
+        severity:
+          green: 1000
+          yellow: 400
+          red: 0
+
+      # ── ERTRAG & ENERGIE: HEUTE / GESAMT ───────────────────────────
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_YOUR_SERIAL_daily_energy
+            name: Heute erzeugt
+            icon: mdi:weather-sunny
+            icon_color: yellow
+            primary_info: state
+            secondary_info: name
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_YOUR_SERIAL_daily_earnings
+            name: Heutiger Ertrag
+            icon: mdi:cash-plus
+            icon_color: green
+            primary_info: state
+            secondary_info: name
+
+          - type: custom:mushroom-entity-card
+            entity: sensor.envertech_YOUR_SERIAL_earnings
+            name: Gesamtertrag
+            icon: mdi:piggy-bank
+            icon_color: green
+            primary_info: state
+            secondary_info: name
+
+      # ── LEISTUNGSVERLAUF: LETZTE 24 STUNDEN ────────────────────────
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: "⚡ Leistung – letzte 24 Stunden"
+          show_states: true
+          colorize_states: true
+        chart_type: line
+        hours_to_show: 24
+        apex_config:
+          chart:
+            height: 250
+            toolbar:
+              show: false
+          stroke:
+            curve: smooth
+            width:
+              - 3
+              - 1.5
+              - 1.5
+              - 1.5
+              - 1.5
+          fill:
+            type:
+              - gradient
+              - solid
+              - solid
+              - solid
+              - solid
+            gradient:
+              shadeIntensity: 1
+              opacityFrom: 0.5
+              opacityTo: 0.02
+              stops:
+                - 0
+                - 100
+          xaxis:
+            labels:
+              datetimeFormatter:
+                hour: HH:mm
+          yaxis:
+            title:
+              text: Watt
+            min: 0
+            labels:
+              formatter: "function(val) { return Math.round(val) + ' W' }"
+          tooltip:
+            x:
+              format: HH:mm dd.MM
+            y:
+              formatter: "function(val) { return Math.round(val) + ' W' }"
+          legend:
+            show: true
+            position: top
+        series:
+          - entity: sensor.envertech_YOUR_SERIAL_total_ac_power
+            name: Gesamt
+            color: "#f39c12"
+          - entity: sensor.envertech_input_port_1_ac_power
+            name: Eingang 1
+            color: "#3498db"
+            opacity: 0.8
+          - entity: sensor.envertech_input_port_2_ac_power
+            name: Eingang 2
+            color: "#2ecc71"
+            opacity: 0.8
+          - entity: sensor.envertech_input_port_3_ac_power
+            name: Eingang 3
+            color: "#9b59b6"
+            opacity: 0.8
+          - entity: sensor.envertech_input_port_4_ac_power
+            name: Eingang 4
+            color: "#e74c3c"
+            opacity: 0.8
+
+      # ── TAGESERTRAG AKKUMULIERT: HEUTE AB 00:00 ────────────────────
+      # Zeigt wie viele kWh seit Mitternacht erzeugt wurden.
+      # Benötigt Utility-Meter-Sensor (siehe Setup Schritt 2).
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: "📈 Tagesertrag heute (kWh ab 00:00 Uhr)"
+          show_states: true
+          colorize_states: true
+        chart_type: area
+        span:
+          start: day
+        hours_to_show: 24
+        apex_config:
+          chart:
+            height: 220
+            toolbar:
+              show: false
+          stroke:
+            curve: stepline
+            width: 2
+          fill:
+            type: gradient
+            gradient:
+              shadeIntensity: 1
+              opacityFrom: 0.65
+              opacityTo: 0.05
+              stops:
+                - 0
+                - 100
+          colors:
+            - "#f39c12"
+          xaxis:
+            labels:
+              datetimeFormatter:
+                hour: HH:mm
+          yaxis:
+            title:
+              text: kWh
+            min: 0
+            labels:
+              formatter: "function(val) { return val.toFixed(2) + ' kWh' }"
+          tooltip:
+            x:
+              format: HH:mm
+            y:
+              formatter: "function(val) { return val.toFixed(3) + ' kWh' }"
+        series:
+          - entity: sensor.envertech_YOUR_SERIAL_daily_energy
+            name: kWh heute
+            color: "#f39c12"
+
+      # ── PRODUKTION: LETZTE 7 TAGE (BALKENDIAGRAMM) ─────────────────
+      - type: custom:apexcharts-card
+        header:
+          show: true
+          title: "📊 Produktion – letzte 7 Tage"
+          show_states: false
+        chart_type: bar
+        span:
+          start: day
+          offset: "-6d"
+        hours_to_show: 168
+        apex_config:
+          chart:
+            height: 240
+            toolbar:
+              show: false
+          plotOptions:
+            bar:
+              borderRadius: 5
+              columnWidth: 55%
+              dataLabels:
+                position: top
+          dataLabels:
+            enabled: true
+            formatter: "function(val) { return val !== null ? val.toFixed(1) + ' kWh' : '' }"
+            offsetY: -20
+            style:
+              fontSize: 11px
+              colors:
+                - "#888888"
+          colors:
+            - "#f39c12"
+          xaxis:
+            labels:
+              datetimeFormatter:
+                day: "EEE dd.MM"
+          yaxis:
+            title:
+              text: kWh
+            min: 0
+            labels:
+              formatter: "function(val) { return val.toFixed(1) }"
+          tooltip:
+            y:
+              formatter: "function(val) { return val !== null ? val.toFixed(2) + ' kWh' : 'Keine Daten' }"
+        series:
+          - entity: sensor.envertech_YOUR_SERIAL_total_energy_all
+            name: Tagesproduktion (kWh)
+            color: "#f39c12"
+            statistics:
+              type: change
+              period: day
+              align: start
+
+      # ── DETAILANSICHT: ALLE 4 EINGÄNGE ─────────────────────────────
+      - type: grid
+        columns: 2
+        square: false
+        cards:
+          - type: entities
+            title: "🌞 Eingang 1"
+            icon: mdi:solar-panel
+            entities:
+              - entity: sensor.envertech_input_port_1_ac_power
+                name: AC-Leistung
+                icon: mdi:flash
+              - entity: sensor.envertech_input_port_1_dc_voltage
+                name: DC-Spannung
+                icon: mdi:current-dc
+              - entity: sensor.envertech_input_port_1_ac_voltage
+                name: AC-Spannung
+                icon: mdi:current-ac
+              - entity: sensor.envertech_input_port_1_frequency
+                name: Netzfrequenz
+                icon: mdi:sine-wave
+              - entity: sensor.envertech_input_port_1_temperature
+                name: Temperatur
+                icon: mdi:thermometer
+              - entity: sensor.envertech_input_port_1_total_energy
+                name: Gesamtenergie
+                icon: mdi:counter
+
+          - type: entities
+            title: "🌞 Eingang 2"
+            icon: mdi:solar-panel
+            entities:
+              - entity: sensor.envertech_input_port_2_ac_power
+                name: AC-Leistung
+                icon: mdi:flash
+              - entity: sensor.envertech_input_port_2_dc_voltage
+                name: DC-Spannung
+                icon: mdi:current-dc
+              - entity: sensor.envertech_input_port_2_ac_voltage
+                name: AC-Spannung
+                icon: mdi:current-ac
+              - entity: sensor.envertech_input_port_2_frequency
+                name: Netzfrequenz
+                icon: mdi:sine-wave
+              - entity: sensor.envertech_input_port_2_temperature
+                name: Temperatur
+                icon: mdi:thermometer
+              - entity: sensor.envertech_input_port_2_total_energy
+                name: Gesamtenergie
+                icon: mdi:counter
+
+          - type: entities
+            title: "🌞 Eingang 3"
+            icon: mdi:solar-panel
+            entities:
+              - entity: sensor.envertech_input_port_3_ac_power
+                name: AC-Leistung
+                icon: mdi:flash
+              - entity: sensor.envertech_input_port_3_dc_voltage
+                name: DC-Spannung
+                icon: mdi:current-dc
+              - entity: sensor.envertech_input_port_3_ac_voltage
+                name: AC-Spannung
+                icon: mdi:current-ac
+              - entity: sensor.envertech_input_port_3_frequency
+                name: Netzfrequenz
+                icon: mdi:sine-wave
+              - entity: sensor.envertech_input_port_3_temperature
+                name: Temperatur
+                icon: mdi:thermometer
+              - entity: sensor.envertech_input_port_3_total_energy
+                name: Gesamtenergie
+                icon: mdi:counter
+
+          - type: entities
+            title: "🌞 Eingang 4"
+            icon: mdi:solar-panel
+            entities:
+              - entity: sensor.envertech_input_port_4_ac_power
+                name: AC-Leistung
+                icon: mdi:flash
+              - entity: sensor.envertech_input_port_4_dc_voltage
+                name: DC-Spannung
+                icon: mdi:current-dc
+              - entity: sensor.envertech_input_port_4_ac_voltage
+                name: AC-Spannung
+                icon: mdi:current-ac
+              - entity: sensor.envertech_input_port_4_frequency
+                name: Netzfrequenz
+                icon: mdi:sine-wave
+              - entity: sensor.envertech_input_port_4_temperature
+                name: Temperatur
+                icon: mdi:thermometer
+              - entity: sensor.envertech_input_port_4_total_energy
+                name: Gesamtenergie
+                icon: mdi:counter
+
+      # ── STEUERUNG ───────────────────────────────────────────────────
+      - type: entities
+        title: Steuerung
+        icon: mdi:tune-variant
+        entities:
+          - entity: select.envertech_YOUR_SERIAL_power_limit
+            name: Leistungsbegrenzung
+            icon: mdi:flash-triangle

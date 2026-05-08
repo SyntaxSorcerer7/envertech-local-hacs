@@ -23,6 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.restore_state import RestoreSensor
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EnvertechConfigEntry
@@ -145,6 +147,10 @@ async def async_setup_entry(
 
     # Earnings sensor (depends on price option)
     entities.append(EnvertechEarningsSensor(coordinator, entry))
+
+    # Daily sensors (auto-reset at midnight, no manual helper needed)
+    entities.append(EnvertechDailyEnergySensor(coordinator, entry))
+    entities.append(EnvertechDailyEarningsSensor(coordinator, entry))
 
     async_add_entities(entities)
 
@@ -270,3 +276,150 @@ class EnvertechEarningsSensor(
                 CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH
             )
         }
+
+
+class EnvertechDailyEnergySensor(
+    CoordinatorEntity[EnvertechCoordinator], RestoreSensor
+):
+    """Sensor for energy produced today. Resets automatically at midnight.
+
+    On HA restart mid-day the baseline is reconstructed from the last
+    persisted daily value so the counter continues correctly.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "daily_energy"
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_icon = "mdi:weather-sunny"
+    _attr_suggested_display_precision = 3
+
+    def __init__(
+        self,
+        coordinator: EnvertechCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._entry = entry
+        self._midnight_baseline: float | None = None
+        self._attr_unique_id = f"{coordinator.serial_hex}_daily_energy"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_hex)},
+            name=f"Envertech {coordinator.serial_hex}",
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore baseline on HA restart and register midnight reset."""
+        await super().async_added_to_hass()
+
+        if (last_data := await self.async_get_last_sensor_data()) is not None:
+            try:
+                last_daily = float(last_data.native_value)  # type: ignore[arg-type]
+                if self.coordinator.data is not None:
+                    self._midnight_baseline = (
+                        self.coordinator.data.total_energy - last_daily
+                    )
+            except (TypeError, ValueError):
+                pass
+
+        if self._midnight_baseline is None and self.coordinator.data is not None:
+            self._midnight_baseline = self.coordinator.data.total_energy
+
+        async_track_time_change(
+            self.hass, self._async_midnight_reset, hour=0, minute=0, second=0
+        )
+
+    async def _async_midnight_reset(self, _now: Any) -> None:
+        """Set new baseline at midnight."""
+        if self.coordinator.data is not None:
+            self._midnight_baseline = self.coordinator.data.total_energy
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> float | None:
+        """Return kWh produced since midnight."""
+        if self.coordinator.data is None or self._midnight_baseline is None:
+            return 0.0
+        return round(
+            max(0.0, self.coordinator.data.total_energy - self._midnight_baseline), 3
+        )
+
+
+class EnvertechDailyEarningsSensor(
+    CoordinatorEntity[EnvertechCoordinator], RestoreSensor
+):
+    """Sensor for earnings today (EUR). Resets automatically at midnight."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "daily_earnings"
+    _attr_native_unit_of_measurement = "EUR"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_icon = "mdi:cash-plus"
+    _attr_suggested_display_precision = 2
+
+    def __init__(
+        self,
+        coordinator: EnvertechCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._entry = entry
+        self._midnight_baseline: float | None = None
+        self._attr_unique_id = f"{coordinator.serial_hex}_daily_earnings"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_hex)},
+            name=f"Envertech {coordinator.serial_hex}",
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+        )
+
+    def _price(self) -> float:
+        return float(
+            self._entry.options.get(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH)
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore baseline on HA restart and register midnight reset."""
+        await super().async_added_to_hass()
+
+        if (last_data := await self.async_get_last_sensor_data()) is not None:
+            try:
+                last_earnings = float(last_data.native_value)  # type: ignore[arg-type]
+                price = self._price()
+                if self.coordinator.data is not None and price > 0:
+                    last_daily_kwh = last_earnings / price
+                    self._midnight_baseline = (
+                        self.coordinator.data.total_energy - last_daily_kwh
+                    )
+            except (TypeError, ValueError, ZeroDivisionError):
+                pass
+
+        if self._midnight_baseline is None and self.coordinator.data is not None:
+            self._midnight_baseline = self.coordinator.data.total_energy
+
+        async_track_time_change(
+            self.hass, self._async_midnight_reset, hour=0, minute=0, second=0
+        )
+
+    async def _async_midnight_reset(self, _now: Any) -> None:
+        """Set new baseline at midnight."""
+        if self.coordinator.data is not None:
+            self._midnight_baseline = self.coordinator.data.total_energy
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> float | None:
+        """Return earnings since midnight in EUR."""
+        if self.coordinator.data is None or self._midnight_baseline is None:
+            return 0.0
+        daily_kwh = max(
+            0.0, self.coordinator.data.total_energy - self._midnight_baseline
+        )
+        return round(daily_kwh * self._price(), 2)
+
