@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EnvertechConfigEntry
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH, DOMAIN, MANUFACTURER, MODEL
 from .coordinator import EnvertechCoordinator
 from .protocol import LiveData, MicroinverterData
 
@@ -142,6 +143,9 @@ async def async_setup_entry(
     for description in TOTAL_SENSORS:
         entities.append(EnvertechTotalSensor(coordinator, description))
 
+    # Earnings sensor (depends on price option)
+    entities.append(EnvertechEarningsSensor(coordinator, entry))
+
     async_add_entities(entities)
 
 
@@ -218,3 +222,51 @@ class EnvertechTotalSensor(
         if self.coordinator.data is None:
             return None
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class EnvertechEarningsSensor(
+    CoordinatorEntity[EnvertechCoordinator], SensorEntity
+):
+    """Sensor for total earnings based on energy produced and price per kWh."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "earnings"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = "EUR"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:currency-eur"
+
+    def __init__(
+        self,
+        coordinator: EnvertechCoordinator,
+        entry: ConfigEntry,
+    ) -> None:
+        """Initialize the earnings sensor."""
+        super().__init__(coordinator)
+        self._entry = entry
+        self._attr_unique_id = f"{coordinator.serial_hex}_earnings"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.serial_hex)},
+            name=f"Envertech {coordinator.serial_hex}",
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return total earnings in EUR."""
+        if self.coordinator.data is None:
+            return None
+        price = self._entry.options.get(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH)
+        total_kwh = self.coordinator.data.total_energy
+        return round(total_kwh * price, 2)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, float]:
+        """Return price per kWh used for calculation."""
+        return {
+            "price_per_kwh": self._entry.options.get(
+                CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH
+            )
+        }

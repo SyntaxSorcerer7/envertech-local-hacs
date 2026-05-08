@@ -325,6 +325,28 @@ Die vollständige Protokolldokumentation befindet sich in [`research/wechselrich
 
 ---
 
+## Changelog
+
+### 1.1.0 – 2026-05-08
+
+- **Neu:** Ertragssensor (EUR) – berechnet den finanziellen Ertrag auf Basis der Gesamtenergie und einem konfigurierbaren Preis pro kWh
+- **Neu:** Options Flow – Preis pro kWh jederzeit über **Einstellungen → Geräte & Dienste → Konfigurieren** anpassbar (Standard: 0,30 €/kWh)
+- Sensor-Typ `monetary` mit `total_increasing` für korrekte HA-Integration
+
+### 1.0.0 – 2026-05-08
+
+- Erstveröffentlichung
+- Live-Daten aller 4 Mikroinverter-Kanäle (DC-Spannung, AC-Leistung, Energie, Temperatur, AC-Spannung, Frequenz)
+- Gesamtleistung und Gesamtenergie als eigene Sensoren
+- Leistungsbegrenzung lesen und setzen (600W–2000W)
+- Persistente TCP-Verbindung für maximale Zuverlässigkeit
+- Retry-Strategie gemäß Protokollspezifikation (Live: 3×, Power Limit: 5× mit dedizierter Verbindung)
+- Config Flow mit Verbindungstest
+- Übersetzungen Deutsch und Englisch
+- HACS-kompatibel
+
+---
+
 ## Lizenz
 
 MIT License

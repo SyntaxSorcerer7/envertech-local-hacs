@@ -18,6 +18,16 @@
       "already_configured": "Dieser Wechselrichter ist bereits konfiguriert."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Envertech EVT Lokal – Optionen",
+        "data": {
+          "price_per_kwh": "Preis pro kWh (EUR)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "dc_voltage": { "name": "DC-Spannung" },
@@ -28,7 +38,8 @@
       "frequency": { "name": "Frequenz" },
       "total_ac_power": { "name": "AC-Gesamtleistung" },
       "total_energy_all": { "name": "Gesamtenergie" },
-      "firmware": { "name": "Firmware-Version" }
+      "firmware": { "name": "Firmware-Version" },
+      "earnings": { "name": "Ertrag" }
     },
     "select": {
       "power_limit": { "name": "Leistungsbegrenzung" }

@@ -7,10 +7,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_PRICE_PER_KWH, CONF_SERIAL, DEFAULT_PRICE_PER_KWH, DOMAIN
 from .protocol import EnvertechConnection
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,6 +28,12 @@ class EnvertechLocalConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Envertech EVT Local."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: Any) -> OptionsFlow:
+        """Return the options flow."""
+        return EnvertechOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -68,4 +75,30 @@ class EnvertechLocalConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+
+class EnvertechOptionsFlow(OptionsFlow):
+    """Handle options for Envertech EVT Local."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current_price = self.config_entry.options.get(
+            CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PRICE_PER_KWH, default=current_price): vol.All(
+                        vol.Coerce(float), vol.Range(min=0)
+                    ),
+                }
+            ),
         )

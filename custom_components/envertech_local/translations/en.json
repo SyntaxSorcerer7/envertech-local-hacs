@@ -18,6 +18,16 @@
       "already_configured": "This inverter is already configured."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Envertech EVT Local – Options",
+        "data": {
+          "price_per_kwh": "Price per kWh (EUR)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "dc_voltage": { "name": "DC Voltage" },
@@ -28,7 +38,8 @@
       "frequency": { "name": "Frequency" },
       "total_ac_power": { "name": "Total AC Power" },
       "total_energy_all": { "name": "Total Energy" },
-      "firmware": { "name": "Firmware Version" }
+      "firmware": { "name": "Firmware Version" },
+      "earnings": { "name": "Earnings" }
     },
     "select": {
       "power_limit": { "name": "Power Limit" }
