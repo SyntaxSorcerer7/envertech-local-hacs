@@ -25,7 +25,7 @@
 #     sensor.envertech_daily_energy
 #     sensor.envertech_daily_earnings
 #     sensor.envertech_earnings
-#     sensor.envertech_input_port_1_ac_power  … bis _4_
+#     sensor.envertech_mi_0_ac_power  … bis _4_
 #     select.envertech_power_limit
 #
 # ═══════════════════════════════════════════════════════════════════════
@@ -58,30 +58,27 @@ views:
           solar:
             entity: sensor.envertech_total_ac_power
             display_zero_state: true
-          individual1:
-            entity: sensor.envertech_input_port_1_ac_power
-            name: Eingang 1
-            icon: mdi:solar-panel
-            color: amber
-            display_zero: true
-          individual2:
-            entity: sensor.envertech_input_port_2_ac_power
-            name: Eingang 2
-            icon: mdi:solar-panel
-            color: amber
-            display_zero: true
-          individual3:
-            entity: sensor.envertech_input_port_3_ac_power
-            name: Eingang 3
-            icon: mdi:solar-panel
-            color: amber
-            display_zero: true
-          individual4:
-            entity: sensor.envertech_input_port_4_ac_power
-            name: Eingang 4
-            icon: mdi:solar-panel
-            color: amber
-            display_zero: true
+          individual:
+            - entity: sensor.envertech_mi_0_ac_power
+              name: Eingang 1
+              icon: mdi:solar-panel
+              color: amber
+              display_zero: true
+            - entity: sensor.envertech_mi_1_ac_power
+              name: Eingang 2
+              icon: mdi:solar-panel
+              color: amber
+              display_zero: true
+            - entity: sensor.envertech_mi_2_ac_power
+              name: Eingang 3
+              icon: mdi:solar-panel
+              color: amber
+              display_zero: true
+            - entity: sensor.envertech_mi_3_ac_power
+              name: Eingang 4
+              icon: mdi:solar-panel
+              color: amber
+              display_zero: true
         watt_threshold: 0
         min_flow_rate: 0.5
         max_flow_rate: 8
@@ -93,7 +90,7 @@ views:
         square: false
         cards:
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_input_port_1_ac_power
+            entity: sensor.envertech_mi_0_ac_power
             name: Eingang 1
             icon: mdi:solar-panel
             icon_color: amber
@@ -101,7 +98,7 @@ views:
             secondary_info: name
 
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_input_port_2_ac_power
+            entity: sensor.envertech_mi_1_ac_power
             name: Eingang 2
             icon: mdi:solar-panel
             icon_color: amber
@@ -109,7 +106,7 @@ views:
             secondary_info: name
 
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_input_port_3_ac_power
+            entity: sensor.envertech_mi_2_ac_power
             name: Eingang 3
             icon: mdi:solar-panel
             icon_color: amber
@@ -117,7 +114,7 @@ views:
             secondary_info: name
 
           - type: custom:mushroom-entity-card
-            entity: sensor.envertech_input_port_4_ac_power
+            entity: sensor.envertech_mi_3_ac_power
             name: Eingang 4
             icon: mdi:solar-panel
             icon_color: amber
@@ -223,19 +220,19 @@ views:
           - entity: sensor.envertech_total_ac_power
             name: Gesamt
             color: "#f39c12"
-          - entity: sensor.envertech_input_port_1_ac_power
+          - entity: sensor.envertech_mi_0_ac_power
             name: Eingang 1
             color: "#3498db"
             opacity: 0.8
-          - entity: sensor.envertech_input_port_2_ac_power
+          - entity: sensor.envertech_mi_1_ac_power
             name: Eingang 2
             color: "#2ecc71"
             opacity: 0.8
-          - entity: sensor.envertech_input_port_3_ac_power
+          - entity: sensor.envertech_mi_2_ac_power
             name: Eingang 3
             color: "#9b59b6"
             opacity: 0.8
-          - entity: sensor.envertech_input_port_4_ac_power
+          - entity: sensor.envertech_mi_3_ac_power
             name: Eingang 4
             color: "#e74c3c"
             opacity: 0.8
@@ -249,13 +246,13 @@ views:
           title: "📈 Tagesertrag heute (kWh ab 00:00 Uhr)"
           show_states: true
           colorize_states: true
-        chart_type: area
+        chart_type: line
         span:
           start: day
-        hours_to_show: 24
         apex_config:
           chart:
             height: 220
+            type: area
             toolbar:
               show: false
           stroke:
@@ -298,14 +295,13 @@ views:
           show: true
           title: "📊 Produktion – letzte 7 Tage"
           show_states: false
-        chart_type: bar
         span:
           start: day
           offset: "-6d"
-        hours_to_show: 168
         apex_config:
           chart:
             height: 240
+            type: bar
             toolbar:
               show: false
           plotOptions:
@@ -355,22 +351,22 @@ views:
             title: "🌞 Eingang 1"
             icon: mdi:solar-panel
             entities:
-              - entity: sensor.envertech_input_port_1_ac_power
+              - entity: sensor.envertech_mi_0_ac_power
                 name: AC-Leistung
                 icon: mdi:flash
-              - entity: sensor.envertech_input_port_1_dc_voltage
+              - entity: sensor.envertech_mi_0_dc_voltage
                 name: DC-Spannung
                 icon: mdi:current-dc
-              - entity: sensor.envertech_input_port_1_ac_voltage
+              - entity: sensor.envertech_mi_0_ac_voltage
                 name: AC-Spannung
                 icon: mdi:current-ac
-              - entity: sensor.envertech_input_port_1_frequency
+              - entity: sensor.envertech_mi_0_frequency
                 name: Netzfrequenz
                 icon: mdi:sine-wave
-              - entity: sensor.envertech_input_port_1_temperature
+              - entity: sensor.envertech_mi_0_temperature
                 name: Temperatur
                 icon: mdi:thermometer
-              - entity: sensor.envertech_input_port_1_total_energy
+              - entity: sensor.envertech_mi_0_total_energy
                 name: Gesamtenergie
                 icon: mdi:counter
 
@@ -378,22 +374,22 @@ views:
             title: "🌞 Eingang 2"
             icon: mdi:solar-panel
             entities:
-              - entity: sensor.envertech_input_port_2_ac_power
+              - entity: sensor.envertech_mi_1_ac_power
                 name: AC-Leistung
                 icon: mdi:flash
-              - entity: sensor.envertech_input_port_2_dc_voltage
+              - entity: sensor.envertech_mi_1_dc_voltage
                 name: DC-Spannung
                 icon: mdi:current-dc
-              - entity: sensor.envertech_input_port_2_ac_voltage
+              - entity: sensor.envertech_mi_1_ac_voltage
                 name: AC-Spannung
                 icon: mdi:current-ac
-              - entity: sensor.envertech_input_port_2_frequency
+              - entity: sensor.envertech_mi_1_frequency
                 name: Netzfrequenz
                 icon: mdi:sine-wave
-              - entity: sensor.envertech_input_port_2_temperature
+              - entity: sensor.envertech_mi_1_temperature
                 name: Temperatur
                 icon: mdi:thermometer
-              - entity: sensor.envertech_input_port_2_total_energy
+              - entity: sensor.envertech_mi_1_total_energy
                 name: Gesamtenergie
                 icon: mdi:counter
 
@@ -401,22 +397,22 @@ views:
             title: "🌞 Eingang 3"
             icon: mdi:solar-panel
             entities:
-              - entity: sensor.envertech_input_port_3_ac_power
+              - entity: sensor.envertech_mi_2_ac_power
                 name: AC-Leistung
                 icon: mdi:flash
-              - entity: sensor.envertech_input_port_3_dc_voltage
+              - entity: sensor.envertech_mi_2_dc_voltage
                 name: DC-Spannung
                 icon: mdi:current-dc
-              - entity: sensor.envertech_input_port_3_ac_voltage
+              - entity: sensor.envertech_mi_2_ac_voltage
                 name: AC-Spannung
                 icon: mdi:current-ac
-              - entity: sensor.envertech_input_port_3_frequency
+              - entity: sensor.envertech_mi_2_frequency
                 name: Netzfrequenz
                 icon: mdi:sine-wave
-              - entity: sensor.envertech_input_port_3_temperature
+              - entity: sensor.envertech_mi_2_temperature
                 name: Temperatur
                 icon: mdi:thermometer
-              - entity: sensor.envertech_input_port_3_total_energy
+              - entity: sensor.envertech_mi_2_total_energy
                 name: Gesamtenergie
                 icon: mdi:counter
 
@@ -424,22 +420,22 @@ views:
             title: "🌞 Eingang 4"
             icon: mdi:solar-panel
             entities:
-              - entity: sensor.envertech_input_port_4_ac_power
+              - entity: sensor.envertech_mi_3_ac_power
                 name: AC-Leistung
                 icon: mdi:flash
-              - entity: sensor.envertech_input_port_4_dc_voltage
+              - entity: sensor.envertech_mi_3_dc_voltage
                 name: DC-Spannung
                 icon: mdi:current-dc
-              - entity: sensor.envertech_input_port_4_ac_voltage
+              - entity: sensor.envertech_mi_3_ac_voltage
                 name: AC-Spannung
                 icon: mdi:current-ac
-              - entity: sensor.envertech_input_port_4_frequency
+              - entity: sensor.envertech_mi_3_frequency
                 name: Netzfrequenz
                 icon: mdi:sine-wave
-              - entity: sensor.envertech_input_port_4_temperature
+              - entity: sensor.envertech_mi_3_temperature
                 name: Temperatur
                 icon: mdi:thermometer
-              - entity: sensor.envertech_input_port_4_total_energy
+              - entity: sensor.envertech_mi_3_total_energy
                 name: Gesamtenergie
                 icon: mdi:counter
 

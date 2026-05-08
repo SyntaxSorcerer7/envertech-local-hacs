@@ -179,7 +179,7 @@ class EnvertechChannelSensor(
             f"{coordinator.serial_hex}_mi{channel_idx}_{description.key}"
         )
         self.entity_id = (
-            f"sensor.envertech_input_port_{channel_idx + 1}_{description.key}"
+            f"sensor.envertech_mi_{channel_idx}_{description.key}"
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.serial_hex}_mi{channel_idx}")},
