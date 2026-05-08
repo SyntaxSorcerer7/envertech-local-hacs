@@ -15,13 +15,14 @@ FRAME_END = 0x16
 CS_SEED = 0x55
 
 TCP_PORT = 14889
-CONNECT_TIMEOUT = 5
-RESPONSE_TIMEOUT_LIVE = 3
-RESPONSE_TIMEOUT_STATUS = 10
-RETRY_DELAY = 3
-MAX_RETRIES_LIVE = 3
-MAX_RETRIES_STATUS = 5
-STATUS_RETRY_DELAY = 5
+CONNECT_TIMEOUT = 10
+RESPONSE_TIMEOUT_LIVE = 8
+RESPONSE_TIMEOUT_STATUS = 15
+RETRY_DELAY = 5
+MAX_RETRIES_LIVE = 5
+MAX_RECONNECTS_LIVE = 3
+MAX_RETRIES_STATUS = 7
+STATUS_RETRY_DELAY = 8
 
 CMD_LIVE_DATA_REQ = 0x1077
 CMD_LIVE_DATA_RESP = 0x1051
@@ -262,49 +263,73 @@ class EnvertechConnection:
             return resp
 
     async def get_live_data(self) -> LiveData:
-        """Fetch live data from the inverter with retries."""
+        """Fetch live data with two-level retry: retries on same connection, then reconnect."""
         async with self._lock:
             last_err: Exception | None = None
-            for attempt in range(MAX_RETRIES_LIVE):
-                try:
-                    await self.connect()
-                    resp = await self._send_and_receive(
-                        CMD_LIVE_DATA_REQ,
-                        bytes(20),
-                        CMD_LIVE_DATA_RESP,
-                        RESPONSE_TIMEOUT_LIVE,
-                        skip_cmds=(CMD_SKIP_1, CMD_SKIP_2),
-                    )
-                    if resp is None:
-                        # Timeout on existing connection – retry without disconnecting
-                        last_err = ConnectionError("No response from inverter")
-                        _LOGGER.debug(
-                            "Live data attempt %d timed out, retrying on same connection",
-                            attempt + 1,
-                        )
-                        if attempt < MAX_RETRIES_LIVE - 1:
-                            await asyncio.sleep(RETRY_DELAY)
-                        continue
 
-                    resp_cmd = struct.unpack(">H", resp[4:6])[0]
-                    if resp_cmd != CMD_LIVE_DATA_RESP:
-                        raise ConnectionError(
-                            f"Unexpected response 0x{resp_cmd:04X}"
-                        )
-
-                    return _parse_live_data(resp)
-
-                except (ConnectionError, OSError) as err:
-                    last_err = err
+            for reconnect in range(MAX_RECONNECTS_LIVE):
+                # On reconnect attempts (not the first), disconnect cleanly first
+                if reconnect > 0:
                     _LOGGER.debug(
-                        "Live data attempt %d connection error: %s", attempt + 1, err
+                        "Reconnect attempt %d/%d – closing and re-opening connection",
+                        reconnect + 1,
+                        MAX_RECONNECTS_LIVE,
                     )
                     await self.disconnect()
-                    if attempt < MAX_RETRIES_LIVE - 1:
-                        await asyncio.sleep(RETRY_DELAY)
+                    await asyncio.sleep(RETRY_DELAY)
+
+                try:
+                    await self.connect()
+                except (OSError, asyncio.TimeoutError) as err:
+                    last_err = err
+                    _LOGGER.debug("Connect failed on reconnect %d: %s", reconnect + 1, err)
+                    continue
+
+                # Inner loop: retry on same connection
+                for attempt in range(MAX_RETRIES_LIVE):
+                    try:
+                        resp = await self._send_and_receive(
+                            CMD_LIVE_DATA_REQ,
+                            bytes(20),
+                            CMD_LIVE_DATA_RESP,
+                            RESPONSE_TIMEOUT_LIVE,
+                            skip_cmds=(CMD_SKIP_1, CMD_SKIP_2),
+                        )
+                        if resp is None:
+                            last_err = ConnectionError("No response from inverter")
+                            _LOGGER.debug(
+                                "Live data attempt %d/%d (reconnect %d) timed out",
+                                attempt + 1,
+                                MAX_RETRIES_LIVE,
+                                reconnect + 1,
+                            )
+                            if attempt < MAX_RETRIES_LIVE - 1:
+                                await asyncio.sleep(RETRY_DELAY)
+                            continue
+
+                        resp_cmd = struct.unpack(">H", resp[4:6])[0]
+                        if resp_cmd != CMD_LIVE_DATA_RESP:
+                            raise ConnectionError(
+                                f"Unexpected response 0x{resp_cmd:04X}"
+                            )
+
+                        return _parse_live_data(resp)
+
+                    except (ConnectionError, OSError) as err:
+                        last_err = err
+                        _LOGGER.debug(
+                            "Live data attempt %d/%d (reconnect %d) error: %s",
+                            attempt + 1,
+                            MAX_RETRIES_LIVE,
+                            reconnect + 1,
+                            err,
+                        )
+                        # Connection broken – break inner loop to trigger reconnect
+                        break
 
             raise ConnectionError(
-                f"Failed to get live data after {MAX_RETRIES_LIVE} attempts"
+                f"Failed to get live data after {MAX_RECONNECTS_LIVE} reconnects "
+                f"x {MAX_RETRIES_LIVE} retries"
             ) from last_err
 
     async def get_power_limit(self) -> int | None:

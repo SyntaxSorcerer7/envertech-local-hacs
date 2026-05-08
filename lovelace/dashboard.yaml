@@ -48,13 +48,12 @@ views:
             Keine Einspeisung – Nacht oder Bewölkung
           {% endif %}
 
-      # ── ENERGIEFLUSS: EINGÄNGE → WECHSELRICHTER → NETZ ────────────
+      # ── ENERGIEFLUSS: EINGÄNGE → WECHSELRICHTER → HAUS ───────────
       - type: custom:power-flow-card-plus
         entities:
-          grid:
+          home:
             entity: sensor.envertech_total_ac_power
-            name: Netzeinspeisung
-            icon: mdi:transmission-tower
+            name: Verbrauch
           solar:
             entity: sensor.envertech_total_ac_power
             display_zero_state: true
@@ -79,7 +78,6 @@ views:
               icon: mdi:solar-panel
               color: amber
               display_zero: true
-        watt_threshold: 0
         min_flow_rate: 0.5
         max_flow_rate: 8
         clickable_entities: true
@@ -170,7 +168,10 @@ views:
           show_states: true
           colorize_states: true
         chart_type: line
-        hours_to_show: 24
+        span:
+          end: now
+          duration:
+            hours: 24
         apex_config:
           chart:
             height: 250

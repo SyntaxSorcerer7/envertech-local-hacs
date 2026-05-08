@@ -38,6 +38,7 @@ class EnvertechChannelSensorDescription(SensorEntityDescription):
     """Describes a per-channel sensor."""
 
     value_fn: Callable[[MicroinverterData], float | None]
+    is_live: bool = True  # True = 0 on disconnect, False = keep last value
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,6 +46,7 @@ class EnvertechTotalSensorDescription(SensorEntityDescription):
     """Describes a total/device-level sensor."""
 
     value_fn: Callable[[LiveData], float | int | str | None]
+    is_live: bool = True  # True = 0 on disconnect, False = keep last value
 
 
 CHANNEL_SENSORS: tuple[EnvertechChannelSensorDescription, ...] = (
@@ -71,6 +73,7 @@ CHANNEL_SENSORS: tuple[EnvertechChannelSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda ch: ch.total_energy,
+        is_live=False,
     ),
     EnvertechChannelSensorDescription(
         key="temperature",
@@ -114,6 +117,7 @@ TOTAL_SENSORS: tuple[EnvertechTotalSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: round(data.total_energy, 2),
+        is_live=False,
     ),
     EnvertechTotalSensorDescription(
         key="firmware",
@@ -156,7 +160,7 @@ async def async_setup_entry(
 
 
 class EnvertechChannelSensor(
-    CoordinatorEntity[EnvertechCoordinator], SensorEntity
+    CoordinatorEntity[EnvertechCoordinator], RestoreSensor
 ):
     """Sensor for a single micro-inverter channel."""
 
@@ -189,6 +193,13 @@ class EnvertechChannelSensor(
             via_device=(DOMAIN, coordinator.serial_hex),
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Restore last value for non-live sensors on HA restart."""
+        await super().async_added_to_hass()
+        if not self.entity_description.is_live:
+            if (last := await self.async_get_last_sensor_data()) is not None:
+                self._attr_native_value = last.native_value
+
     @property
     def native_value(self) -> float | None:
         """Return the sensor value."""
@@ -196,13 +207,18 @@ class EnvertechChannelSensor(
             self.coordinator.data is None
             or self._channel_idx >= len(self.coordinator.data.channels)
         ):
-            return None
+            if self.entity_description.is_live:
+                return 0
+            return self._attr_native_value  # keep last known value
         channel = self.coordinator.data.channels[self._channel_idx]
-        return self.entity_description.value_fn(channel)
+        val = self.entity_description.value_fn(channel)
+        if not self.entity_description.is_live and val is not None:
+            self._attr_native_value = val
+        return val
 
 
 class EnvertechTotalSensor(
-    CoordinatorEntity[EnvertechCoordinator], SensorEntity
+    CoordinatorEntity[EnvertechCoordinator], RestoreSensor
 ):
     """Sensor for device-level totals."""
 
@@ -226,16 +242,28 @@ class EnvertechTotalSensor(
             model=MODEL,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Restore last value for non-live sensors on HA restart."""
+        await super().async_added_to_hass()
+        if not self.entity_description.is_live:
+            if (last := await self.async_get_last_sensor_data()) is not None:
+                self._attr_native_value = last.native_value
+
     @property
     def native_value(self) -> float | int | str | None:
         """Return the sensor value."""
         if self.coordinator.data is None:
-            return None
-        return self.entity_description.value_fn(self.coordinator.data)
+            if self.entity_description.is_live:
+                return 0
+            return self._attr_native_value  # keep last known value
+        val = self.entity_description.value_fn(self.coordinator.data)
+        if not self.entity_description.is_live and val is not None:
+            self._attr_native_value = val
+        return val
 
 
 class EnvertechEarningsSensor(
-    CoordinatorEntity[EnvertechCoordinator], SensorEntity
+    CoordinatorEntity[EnvertechCoordinator], RestoreSensor
 ):
     """Sensor for total earnings based on energy produced and price per kWh."""
 
@@ -264,14 +292,22 @@ class EnvertechEarningsSensor(
             model=MODEL,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Restore last earnings value on HA restart."""
+        await super().async_added_to_hass()
+        if (last := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = last.native_value
+
     @property
     def native_value(self) -> float | None:
         """Return total earnings in EUR."""
         if self.coordinator.data is None:
-            return None
+            return self._attr_native_value  # keep last known value
         price = self._entry.options.get(CONF_PRICE_PER_KWH, DEFAULT_PRICE_PER_KWH)
         total_kwh = self.coordinator.data.total_energy
-        return round(total_kwh * price, 2)
+        val = round(total_kwh * price, 2)
+        self._attr_native_value = val
+        return val
 
     @property
     def extra_state_attributes(self) -> dict[str, float]:
