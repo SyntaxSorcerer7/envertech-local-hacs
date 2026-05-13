@@ -54,6 +54,11 @@ class EnvertechPowerLimitSelect(
         )
 
     @property
+    def available(self) -> bool:
+        """Keep the last known power limit visible during short reconnects."""
+        return self.coordinator.power_limit is not None
+
+    @property
     def current_option(self) -> str | None:
         """Return the current power limit."""
         if self.coordinator.power_limit is not None:

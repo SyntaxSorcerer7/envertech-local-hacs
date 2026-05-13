@@ -11,7 +11,7 @@ from .coordinator import EnvertechCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SELECT]
 
-type EnvertechConfigEntry = ConfigEntry[EnvertechCoordinator]
+EnvertechConfigEntry = ConfigEntry[EnvertechCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnvertechConfigEntry) -> bool:
